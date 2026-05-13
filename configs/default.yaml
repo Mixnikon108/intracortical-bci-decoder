@@ -1,0 +1,20 @@
+data:
+  root: "../NeuralBench/data/handwritingBCIData"
+  hmm_source: "HeldOutBlocks"
+  sessions: null  # null = all available
+
+preprocessing:
+  sigma_values: [0, 1, 2, 4, 8]
+  default_sigma: 4.0
+  min_char_duration: 20  # bins (200ms at 10ms/bin)
+
+analysis:
+  n_cv_folds: 10
+  n_permutations: 1000
+  regularization_values: [0.01, 0.1, 1.0, 10.0]
+  n_jobs: -1
+  random_seed: 42
+
+features:
+  primary_window: "q1"  # first quartile (most conservative)
+  transition_types: ["letter_letter"]  # primary analysis
