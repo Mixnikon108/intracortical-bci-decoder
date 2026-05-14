@@ -1,6 +1,10 @@
 """Experiment 3: Temporal blurring controls — sigma sweep and causal filter."""
 
+import warnings
 from typing import List
+
+warnings.filterwarnings("ignore", message="y_pred contains classes not in y_true")
+warnings.filterwarnings("ignore", message="The least populated class in y")
 
 from anticipatory.data.loader import SessionData
 from anticipatory.data.features import extract_character_features

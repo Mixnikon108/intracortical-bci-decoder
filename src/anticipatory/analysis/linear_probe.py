@@ -1,11 +1,16 @@
+import warnings
+import time
+
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import StratifiedGroupKFold, GridSearchCV
-from sklearn.pipeline import Pipeline
+from sklearn.model_selection import StratifiedGroupKFold
 from typing import Optional
 
 from anticipatory.analysis.metrics import compute_all_metrics
+
+warnings.filterwarnings("ignore", message="y_pred contains classes not in y_true")
+warnings.filterwarnings("ignore", message="The least populated class in y")
 
 
 def residualize(
@@ -68,7 +73,9 @@ def run_residualized_probe(
     all_y_pred_raw = []  # predictions WITHOUT residualization (for comparison)
     fold_results = []
 
+    t0 = time.time()
     for fold_idx, (train_idx, test_idx) in enumerate(cv.split(X, y_target, groups)):
+        fold_start = time.time()
         X_train, X_test = X[train_idx], X[test_idx]
         y_cur_train, y_cur_test = y_current[train_idx], y_current[test_idx]
         y_tgt_train, y_tgt_test = y_target[train_idx], y_target[test_idx]
@@ -128,6 +135,13 @@ def run_residualized_probe(
         fold_metrics["best_C"] = best_C
         fold_metrics["fold"] = fold_idx
         fold_results.append(fold_metrics)
+
+        elapsed = time.time() - fold_start
+        total = time.time() - t0
+        eta = (total / (fold_idx + 1)) * (n_splits - fold_idx - 1)
+        print(f"    Fold {fold_idx+1}/{n_splits}: "
+              f"acc={fold_metrics['balanced_accuracy']:.4f}  "
+              f"({elapsed:.0f}s, ETA {eta:.0f}s)", flush=True)
 
     # Aggregate metrics
     y_true_all = np.array(all_y_true)

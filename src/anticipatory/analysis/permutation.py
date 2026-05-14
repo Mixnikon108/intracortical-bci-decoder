@@ -1,6 +1,12 @@
+import time
+import warnings
+
 import numpy as np
 from joblib import Parallel, delayed
 from typing import Callable
+
+warnings.filterwarnings("ignore", message="y_pred contains classes not in y_true")
+warnings.filterwarnings("ignore", message="The least populated class in y")
 
 
 def shuffle_within_classes(
@@ -54,10 +60,16 @@ def permutation_test(
         y_perm = shuffle_within_classes(y_target, y_condition, perm_rng)
         return score_fn(y_perm)
 
-    null_dist = Parallel(n_jobs=n_jobs, verbose=5)(
+    print(f"    Permutation test: {n_permutations} iterations, n_jobs={n_jobs}", flush=True)
+    t0 = time.time()
+
+    null_dist = Parallel(n_jobs=n_jobs, verbose=10)(
         delayed(_single_permutation)(s) for s in seeds
     )
     null_dist = np.array(null_dist)
+
+    elapsed = time.time() - t0
+    print(f"    Permutations completed in {elapsed/60:.1f} min", flush=True)
 
     # p-value: fraction of permutations >= observed
     p_value = (np.sum(null_dist >= observed) + 1) / (n_permutations + 1)
